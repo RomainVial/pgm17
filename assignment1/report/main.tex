@@ -1,0 +1,251 @@
+\documentclass{article} 
+\input{packages}
+\input{macros}
+\usepackage{multirow}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Header
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\assignmenttitle}{Homework 1}
+\renewcommand{\studentname}{Romain Vial}
+\renewcommand{\email}{romain.vial@ens-paris-saclay.fr}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Syntax for using figure macros:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \singlefig{filename}{scalefactor}{caption}{label}
+% \doublefig{\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {global caption}{label}
+% \triplefig{\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {global caption}{label}
+%
+% Tips:
+% - with scalefactor=1, a single figure will take the whole page width; a double figure, half page width; and a triple figure, a third of the page width
+% - image files should be placed in the image folder
+% - no need to put image extension to include the image
+% - for vector graphics (plots), pdf figures are suggested 
+% - for images, jpg/png are suggested
+% - labels can be left empty {}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beginning of assignment
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+
+\section{Learning in discrete graphical models}
+
+Considérons le modèle suivant : $z$ et $x$ sont des variables aléatoires prenant respectivement $M$ et $K$ valeurs différentes. On a de plus $p(z=m)=\pi_m$ et $p(x=k|z=m)=\theta_{mk}$.
+
+En utilisant un encodage one-hot, on peut écrire:
+\begin{align*}
+p(z) &= \prod_{m=1}^M \pi_m^{z_m} \\
+p(x|z=m) &= \prod_{k=1}^K \theta_{mk}^{x_k \times z_m}
+\end{align*}
+où $(x_k)_{k=1\ldots K} = (1_{\{x=k\}})_{k=1\ldots K}$ et $(z_m)_{m=1\ldots M} = (1_{\{z=m\}})_{m=1\ldots M}$
+
+On en déduit la loi jointe du couple $(x,z)$ avec $\mathbf{\theta} = \{(\theta_{mk})_{m=1\ldots M, k=1\ldots K}\}$ et $\mathbf{\pi} = \{(\pi_m)_{m=1\ldots M}\}$:
+\begin{align*}
+p(x, z; \mathbf{\theta}, \mathbf{\pi}) &= p(x|z)\times p(z)\\
+	&= \prod_{m=1\ldots M} \pi_m^{z_m} \prod_{k=1\ldots K} \theta_{mk}^{x_k \times z_m}
+\end{align*}
+
+Considérons à présent la log-vraisemblance de $N$ observations i.i.d. du couple $(x,z)$ :
+\begin{align*}
+l(\mathbf{\theta}, \mathbf{\pi}) &= \sum_{i=1}^N \log p(x^{(i)}, z^{(i)};\mathbf{\theta})\\
+	&= \sum_{i=1}^N \left[ \sum_{m=1}^M \left[ z_m^{(i)} \log \pi_m + \sum_{k=1}^K x_k^{(i)} \times z_m^{(i)} \log \theta_{mk} \right] \right]\\
+	&= \sum_{m=1}^M \left[ N_m \log \pi_m + \sum_{k=1}^K N_{mk} \log \theta_{mk} \right] 
+\end{align*}
+où $N_m = \sum_{i=1}^N z_m^{(i)}$ et $N_{mk} = \sum_{n=1}^N x_k^{(i)} \times z_m^{(i)}$. $N_m$ est le nombre d'observations de la classe $m$ et $N_{mk}$ est le nombre d'observations du couple $(x=k, z=m)$.
+
+Les contraintes du problème d'optimisation sont les suivantes :
+\begin{align*}
+\sum_{m=1}^M \pi_m = 1 \\
+\forall m\in [1\ldots M]\; \sum_{k=1}^K \theta_{mk} = 1
+\end{align*}
+%
+On en déduit que le Lagrangien du problème, définit sur ${\mathbb{R}^*_+}^K \times {\mathbb{R}^*_+}^M \times {\mathbb{R}^*_+}^{M+1}$, s'écrit :
+\begin{align*}
+L(\mathbf{\theta}, \mathbf{\pi}, \lambda) = -l(\mathbf{\theta}, \mathbf{\pi}) + \lambda_1 \left( \sum_{m=1}^M \pi_m - 1 \right) + \sum_{m=1}^M \lambda_{m+1} \left( \sum_{k=1}^K \theta_{mk} - 1 \right)
+\end{align*}
+%
+La fonction $-l$ est convexe comme somme à coefficients positifs ($N_m \geq 0$ et $N_{mk} \geq 0$) de logarithmes. De plus, la condition de Slater est vérifiée car il existe trivialement $\pi_1 \ldots \pi_M$ vérifiant $\forall m,\; \pi_m > 0$ et $\sum_{m=1}^M \pi_m = 1$ (de même pour $\theta_{m1}...\theta_{mK},\; \forall m$). On en conclut ainsi que le problème vérifie la propriété de dualité forte :
+$$
+\min_{\mathbf{\theta}, \mathbf{\pi}} -l(\mathbf{\theta}, \mathbf{\pi}) = \max_\lambda \min_{\mathbf{\theta}, \mathbf{\pi}} L(\mathbf{\theta}, \mathbf{\pi}, \lambda)
+$$
+
+Comme $L(\mathbf{\theta}, \mathbf{\pi}, \lambda)$ est convexe par rapport à $(\mathbf{\theta},\mathbf{\pi})$, il suffit de regarder les dérivées partielles par rapport à chaque paramètre pour obtenir $\min_{\mathbf{\theta}, \mathbf{\pi}} L(\mathbf{\theta}, \mathbf{\pi}, \lambda)$. On obtient :
+\begin{align*}
+\frac{\partial L}{\pi_m} &= -\frac{N_m}{\pi_m} + \lambda_1 = 0, \; \forall m\in [1\ldots M]\\
+\frac{\partial L}{\partial \theta_{mk}} &= -\frac{N_{mk}}{\theta_{mk}} +\lambda_{m+1} = 0, \; \forall m\in [1\ldots M], \forall k\in [1\ldots K]\\
+\end{align*}
+On en déduit que $\pi_m  \propto N_m$ et $\theta_{mk} \propto N_{mk}$. Afin que les contraintes soient respectées, on conclut que :
+\begin{align*}
+\hat{\pi_m} &= \frac{N_m}{\sum_{m=1}^M N_m} = \frac{N_m}{N}\\
+\hat{\theta_{mk}} &= \frac{N_{mk}}{\sum_{k=1}^K N_{mk}}
+\end{align*}
+
+On peut faire deux remarques sur le résultat obtenu :
+\begin{itemize}
+\item $\hat{\pi_m}$ correspond à la moyenne du nombre d'observations de la classe $m$ alors que $\hat{\theta_{mk}}$ correspond à la moyenne du nombre d'observations de la classe $k$ dans la classe $m$.
+\item On observe que par construction du modèle graphique, les deux paramètres $\mathbf{\pi}$ et $\mathbf{\theta}$ ont été optimisés indépendamment et correspondent aux estimateurs du maximum de vraisemblance de $p(z)$ et $p(x|z)$ respectivement.
+\end{itemize}
+
+\section{Linear Classification}
+
+\question{1. Linear Discriminant Analysis}
+
+\begin{enumerate}[label=(\alph*)]
+\item \textbf{TODO: Calculs du MLE}
+
+\item La distribution conditionnelle $p(y=1|x)$ s'écrit sous la forme suivante :
+\begin{align*}
+p(y=1|x) &= \frac{p(x|y=1)\times p(y=1)}{p(x|y=1)\times p(y=1) + p(x|y=0)\times p(y=0)}\\
+&= \frac{1}{1 + \frac{p(x|y=0)\times p(y=0)}{p(x|y=1)\times p(y=1)}}
+\end{align*}
+
+En posant $s_i(x) = \log p(x|y=i)\times p(y=i)$, on obtient :
+\begin{align*}
+p(y=1|x) &= \frac{1}{1 + \exp(-(s_1(x)-s_0(x)))}\\
+&= \sigma(s_1(x)-s_0(x))
+\end{align*}
+On observe que la distribution conditionnelle peut se mettre sous une forme similaire à celle de la régression logistique. Néanmoins, l'introduction des distributions à priori sur $y$ et $x|y=i$ amènent à des résultats et des droites de classification différentes.
+
+\item A présent, on cherche la droite de classification correspondant à $p(y=1|x) = 0.5$ ou encore $s_1(x) = s_0(x)$. L'équation de la droite est la suivante :
+$$
+\log\frac{\pi}{1-\pi} - \frac{1}{2}\mu_1^\intercal \Sigma^{-1} \mu_1 + \frac{1}{2}\mu_0^\intercal \Sigma^{-1}\mu_0 + x^\intercal \Sigma^{-1}(\mu_1 - \mu_0) = 0
+$$
+\item A présent, on cherche la droite de classification correspondant à $y = 0.5$. Cela correspond à l'équation suivante :
+$$ x_2 = -\frac{w_1}{w_2}x_1 - \frac{b}{w_2} $$
+\triplefig{\subfig{dataset_A_lda}{1}{Dataset A}{lda_A}}
+          {\subfig{dataset_B_lda}{1}{Dataset B}{lda_B}}
+          {\subfig{dataset_C_lda}{1}{Dataset C}{lda_C}}
+          {Droites de classification par méthode LDA sur les jeux de données d'entraînement}{lda}
+\end{enumerate}
+
+\question{2. Logistic Regression}
+
+On considère le modèle de régression logistique où $y = \sigma\left(w^\intercal x + b \right) = \sigma\left( (w_1 w_2) \begin{pmatrix}x_1\\x_2\end{pmatrix} + b \right)$.
+\begin{enumerate}[label=(\alph*)]
+\item Les paramètres appris par le modèle après 10 itérations de l'algorithme IRLS sur chaque jeu de données sont les suivant :
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+    & Dataset A & Dataset B & Dataset C\\
+\hline
+$w$ & $[-42.6261, -73.0275]^\intercal$ & $[-1.7052, 1.0238]^\intercal$& $[-2.2032, 0.7093]^\intercal$\\
+\hline
+$b$ & $-7.8018$ & $1.3496$ & $0.9592$\\
+\hline
+\end{tabular}
+\end{center}
+
+\item A présent, on cherche la droite de classification correspondant à $y = 0.5$. Cela correspond à l'équation suivante :
+$$ x_2 = -\frac{w_1}{w_2}x_1 - \frac{b}{w_2} $$
+\triplefig{\subfig{dataset_A_log_reg}{1}{Dataset A}{log_reg_A}}
+          {\subfig{dataset_B_log_reg}{1}{Dataset B}{log_reg_B}}
+          {\subfig{dataset_C_log_reg}{1}{Dataset C}{log_reg_C}}
+          {Droites de régression logistique sur les jeux de données d'entraînement}{log_reg}
+\end{enumerate}
+
+\question{3. Linear Regression}
+
+On considère le modèle de régression linéaire où $y = w^\intercal x + b = (w_1 w_2) \begin{pmatrix}x_1\\x_2\end{pmatrix} + b$.
+\begin{enumerate}[label=(\alph*)]
+\item Les paramètres appris par le modèle sur chaque jeu de données sont les suivant:
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+    & Dataset A & Dataset B & Dataset C\\
+\hline
+$w$ & $[-0.2640, -0.3726]^\intercal$ & $[-0.1042, 0.0518]^\intercal$& $[-0.1277, -0.0170]^\intercal$\\
+\hline
+$b$ & $0.4923$ & $0.5001$ & $0.5084$\\
+\hline
+\end{tabular}
+\end{center}
+
+\item A présent, on cherche la droite de régression correspondant à $y=0.5$. Cela correspond à l'équation suivante :
+$$ x_2 = -\frac{w_1}{w_2}x_1 + \frac{y-b}{w_2} $$
+\triplefig{\subfig{dataset_A_lin_reg}{1}{Dataset A}{lin_reg_A}}
+          {\subfig{dataset_B_lin_reg}{1}{Dataset B}{lin_reg_B}}
+          {\subfig{dataset_C_lin_reg}{1}{Dataset C}{lin_reg_C}}
+          {Droites de régression linéaire sur les jeux de données d'entraînement}{lin_reg}
+\end{enumerate}
+
+\question{4. Comparaison des approches}
+
+\begin{enumerate}[label=(\alph*)]
+\item Les erreurs de classification pour chaque modèle dans chaque dataset sont résumées dans le tableau suivant :
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\multirow{2}{*}{Taux d'erreur (\%)} & \multicolumn{2}{c|}{Dataset A} & \multicolumn{2}{c|}{Dataset B} & \multicolumn{2}{c|}{Dataset C}\\
+& Train & Test & Train & Test & Train & Test\\
+\hline
+Linear Regression & $1.33$ & $2.07$ & $3.00$ & $\textbf{4.15}$ & $5.50$ & $4.23$\\
+\hline
+Logistic Regression & $\textbf{0.00}$ & $3.47$ & $\textbf{2.00}$ & $4.30$ & $\textbf{4.00}$ & $\textbf{2.27}$\\
+\hline
+LDA & $1.33$ & $\textbf{2.00}$ & $3.00$ & $\textbf{4.15}$ & $5.50$ & $4.23$\\
+\hline
+\end{tabular}
+\end{center}
+
+\item \textbf{TODO: Discussions sur les taux d'erreur}
+\end{enumerate}
+
+\question{5. Quadratic Discriminant Analysis}
+
+A présent, on relache l'hypothèse d'égalité des matrices de covariance pour obtenir un modèle d'analyse discriminante quadratique.
+
+\begin{enumerate}[label=(\alph*)]
+\item Les paramètres appris par le modèle sur chaque jeu de données sont les suivant:
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+    & Dataset A & Dataset B & Dataset C\\
+\hline
+$\mu_0$ & $[2.8997, -0.8939]^\intercal$ & $[3.3407, -0.8355]^\intercal$& $[2.7930, -0.8384]^\intercal$\\
+\hline
+$\Sigma_0$ & $\begin{pmatrix}2.3107&-1.0475\\-1.0475&0.5758\end{pmatrix}$ & $\begin{pmatrix}2.5389&1.0642\\1.0642&2.9601\end{pmatrix}$ & $\begin{pmatrix}2.8991&1.2458\\1.2458&2.9248\end{pmatrix}$\\
+\hline
+$\mu_1$ & $[-2.6923,  0.8660]^\intercal$ & $[-3.2167, 1.0831]^\intercal$& $[-2.9423, -0.9578]^\intercal$\\
+\hline
+$\Sigma_1$ & $\begin{pmatrix}2.7044&-1.3008\\-1.3008&0.6897\end{pmatrix}$ & $\begin{pmatrix}4.1536&-1.3345\\-1.3345&0.5161\end{pmatrix}$ & $\begin{pmatrix}2.8691&-1.7620\\-1.7620&6.5644\end{pmatrix}$\\
+\hline
+$\pi$ & $\frac{1}{3}$ & $\frac{1}{2}$ & $0.625$\\
+\hline
+\end{tabular}
+\end{center}
+
+\item De manière similaire au modèle LDA, la conique de classification vérifie l'équation :
+$$
+\log \frac{\pi}{1 - \pi} + \frac{1}{2}\log\frac{\det \Sigma_1}{\det \Sigma_0} - \frac{1}{2}(x-\mu_1)^\intercal\Sigma_1^{-1}(x-\mu_1) + \frac{1}{2}(x-\mu_0)^\intercal\Sigma_0^{-1}(x-\mu_0) = 0
+$$
+\triplefig{\subfig{dataset_A_qda}{1}{Dataset A}{qda_A}}
+          {\subfig{dataset_B_qda}{1}{Dataset B}{qda_B}}
+          {\subfig{dataset_C_qda}{1}{Dataset C}{qda_C}}
+          {Droites de classification par méthode QDA sur les jeux de données d'entraînement}{qda}
+
+\item On obtient les taux d'erreurs suivant pour le modèle QDA :
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\multirow{2}{*}{Taux d'erreur (\%)} & \multicolumn{2}{c|}{Dataset A} & \multicolumn{2}{c|}{Dataset B} & \multicolumn{2}{c|}{Dataset C}\\
+& Train & Test & Train & Test & Train & Test\\
+\hline
+QDA & $0.67$ & $\textbf{2.00}$ & $\textbf{1.33}$ & $\textbf{2.00}$ & $5.25$ & $3.83$\\
+\hline
+\end{tabular}
+\end{center}
+
+\item \textbf{TODO: Commentaires sur les taux d'erreurs}
+\end{enumerate}
+
+\end{document} 

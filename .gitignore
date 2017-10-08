@@ -1,0 +1,9 @@
+*.pyc
+*~
+
+/pgm/*
+
+/assignment1/.idea/*
+/assignment1/output/*
+/assignment1/classification_data_HWK1/*
+/assignment1/report/build/*

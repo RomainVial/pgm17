@@ -1,0 +1,201 @@
+Analyzing dataset A
+--Quadratic Discriminant Analysis--
+pi: 0.33333333333333331
+mu_0: array([ 2.89970947, -0.893874  ])
+mu_1: array([-2.69232004,  0.866042  ])
+sigma_0: array([[ 2.31065259, -1.04748461],
+       [-1.04748461,  0.57578403]])
+sigma_1: array([[ 2.70442172, -1.3008515 ],
+       [-1.3008515 ,  0.68969588]])
+Train Classification
+True/Predicted      1     0
+1                  50     0
+0                   1    99
+Error rate: 0.0067
+
+Test Classification
+True/Predicted      1     0
+1                 486    14
+0                  16   984
+Error rate: 0.0200
+
+--Linear Discriminant Analysis--
+pi: 0.33333333333333331
+mu_0: array([ 2.89970947, -0.893874  ])
+mu_1: array([-2.69232004,  0.866042  ])
+sigma: array([[ 2.44190897, -1.13194024],
+       [-1.13194024,  0.61375465]])
+Train Classification
+True/Predicted      1     0
+1                  50     0
+0                   2    98
+Error rate: 0.0133
+
+Test Classification
+True/Predicted      1     0
+1                 490    10
+0                  20   980
+Error rate: 0.0200
+
+--Linear Regression--
+w_hat: array([-0.2640075 , -0.37259311,  0.49229204])
+Train Classification
+True/Predicted      1     0
+1                  50     0
+0                   2    98
+Error rate: 0.0133
+
+Test Classification
+True/Predicted      1     0
+1                 489    11
+0                  20   980
+Error rate: 0.0207
+
+--Logistic Regression--
+w_hat: array([-42.62610177, -73.02751747,  -7.80183102])
+Train Classification
+True/Predicted      1     0
+1                  50     0
+0                   0   100
+Error rate: 0.0000
+
+Test Classification
+True/Predicted      1     0
+1                 465    35
+0                  17   983
+Error rate: 0.0347
+
+Analyzing dataset B
+--Quadratic Discriminant Analysis--
+pi: 0.5
+mu_0: array([ 3.34068896, -0.83546333])
+mu_1: array([-3.21670734,  1.08306733])
+sigma_0: array([[ 2.53885859,  1.0642112 ],
+       [ 1.0642112 ,  2.96007891]])
+sigma_1: array([[ 4.15361075, -1.33454097],
+       [-1.33454097,  0.51607059]])
+Train Classification
+True/Predicted      1     0
+1                 146     4
+0                   0   150
+Error rate: 0.0133
+
+Test Classification
+True/Predicted      1     0
+1                 980    20
+0                  20   980
+Error rate: 0.0200
+
+--Linear Discriminant Analysis--
+pi: 0.5
+mu_0: array([ 3.34068896, -0.83546333])
+mu_1: array([-3.21670734,  1.08306733])
+sigma: array([[ 3.34623467, -0.13516489],
+       [-0.13516489,  1.73807475]])
+Train Classification
+True/Predicted      1     0
+1                 142     8
+0                   1   149
+Error rate: 0.0300
+
+Test Classification
+True/Predicted      1     0
+1                 935    65
+0                  18   982
+Error rate: 0.0415
+
+--Linear Regression--
+w_hat: array([-0.10424575,  0.05179118,  0.50005043])
+Train Classification
+True/Predicted      1     0
+1                 142     8
+0                   1   149
+Error rate: 0.0300
+
+Test Classification
+True/Predicted      1     0
+1                 935    65
+0                  18   982
+Error rate: 0.0415
+
+--Logistic Regression--
+w_hat: array([-1.70518586,  1.02378538,  1.34959157])
+Train Classification
+True/Predicted      1     0
+1                 145     5
+0                   1   149
+Error rate: 0.0200
+
+Test Classification
+True/Predicted      1     0
+1                 968    32
+0                  54   946
+Error rate: 0.0430
+
+Analyzing dataset C
+--Quadratic Discriminant Analysis--
+pi: 0.625
+mu_0: array([ 2.79304824, -0.83838667])
+mu_1: array([-2.94232885, -0.9578284 ])
+sigma_0: array([[ 2.89913927,  1.24581553],
+       [ 1.24581553,  2.92475448]])
+sigma_1: array([[ 2.86914403, -1.76197061],
+       [-1.76197061,  6.56438626]])
+Train Classification
+True/Predicted      1     0
+1                 241     9
+0                  12   138
+Error rate: 0.0525
+
+Test Classification
+True/Predicted      1     0
+1                1933    67
+0                  48   952
+Error rate: 0.0383
+
+--Linear Discriminant Analysis--
+pi: 0.625
+mu_0: array([ 2.79304824, -0.83838667])
+mu_1: array([-2.94232885, -0.9578284 ])
+sigma: array([[ 2.88039225, -0.63405081],
+       [-0.63405081,  5.19952435]])
+Train Classification
+True/Predicted      1     0
+1                 241     9
+0                  13   137
+Error rate: 0.0550
+
+Test Classification
+True/Predicted      1     0
+1                1935    65
+0                  62   938
+Error rate: 0.0423
+
+--Linear Regression--
+w_hat: array([-0.12769333, -0.01700142,  0.50839982])
+Train Classification
+True/Predicted      1     0
+1                 241     9
+0                  13   137
+Error rate: 0.0550
+
+Test Classification
+True/Predicted      1     0
+1                1935    65
+0                  62   938
+Error rate: 0.0423
+
+--Logistic Regression--
+w_hat: array([-2.2032324 ,  0.70926562,  0.95918885])
+Train Classification
+True/Predicted      1     0
+1                 243     7
+0                   9   141
+Error rate: 0.0400
+
+Test Classification
+True/Predicted      1     0
+1                1959    41
+0                  27   973
+Error rate: 0.0227
+
