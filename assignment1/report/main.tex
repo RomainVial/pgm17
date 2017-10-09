@@ -101,7 +101,47 @@ On peut faire deux remarques sur le résultat obtenu :
 \question{1. Linear Discriminant Analysis}
 
 \begin{enumerate}[label=(\alph*)]
-\item \textbf{TODO: Calculs du MLE}
+\item On suppose que les distributions de $y$ et $x|y=i$ suivent les lois suivantes:
+$$
+y\sim \text{Bernoulli}(\pi),\;\; x|\{y=i\} \sim \mathcal{N}(\mu_i, \Sigma)
+$$
+On en déduit la loi jointe du couple $(x,y)$:
+\begin{align*}
+p(x, y; \pi, \mu_0, \mu_1, \Sigma) &= p(x|y)p(y)\\
+&= \pi^y \times (1-\pi)^{1-y} \times \mathcal{N}(x, \mu_y, \Sigma)
+\end{align*}
+
+Considérons à présent la log-vraisemblance de $n$ observations i.i.d. du couple $(x,y)$ :
+\begin{align*}
+l(\pi, \mu_0, \mu_1, \Sigma) =& \sum_{i=1}^n \left[ y^{(i)} \log \pi + (1-y^{(i)})\log(1-\pi) + \log \mathcal{N}(x^{(i)}, \mu_{y^{(i)}}, \Sigma) \right]\\
+=& \sum_{i=1}^n \left[ y^{(i)} \log \pi + (1-y^{(i)})\log(1-\pi)\right]\\
+ &+ \sum_{i\in C_0} \log \mathcal{N}(x^{(i)}, \mu_0, \Sigma) + \sum_{i\in C_1} \log \mathcal{N}(x^{(i)}, \mu_1, \Sigma)
+\end{align*}
+où $C_i = \{j, y^{(j)} = i\}$ et $n_i = |C_i|$.
+
+On peut à présent calculer le gradient de $l$ par rapport à chaque composante. On retrouve facilement que :
+\begin{align*}
+\hat{\pi} &= \frac{n_1}{n}\\
+\hat{\mu_0} &= \frac{1}{n_0} \sum_{i\in C_0} x^{(i)}\\
+\hat{\mu_1} &= \frac{1}{n_1} \sum_{i\in C_1} x^{(i)}
+\end{align*}
+On observe que $\hat{\pi}$ est la moyenne du nombre d'observations de la classe 1 et $\hat{\mu_0}$ et $\hat{\mu_1}$ sont les moyennes des observations des classes 0 et 1 respectivement.
+
+A présent, détaillons davantage le calcul de $\hat{\Sigma}$. On a tout d'abord :
+\begin{align*}
+\sum_{i\in C_i} \log \mathcal{N}(x^{(i)}, \mu_i, \Sigma) &= -\frac{n_i d}{2} \log(2\pi) - \frac{n_i}{2}\log \det \Sigma - \frac{1}{2}\sum_{i=1}^{n_i}(x^{(i)}-\mu_i)^\intercal \Sigma^{-1} (x^{(i)}-\mu_i)\\
+&= -\frac{n_i d}{2} \log(2\pi) + \frac{n_i}{2}\log \det A - \frac{n_i}{2} \text{Tr}(A\tilde{\Sigma_i})
+\end{align*}
+en posant $A = \Sigma^{-1}$ et $\tilde{\Sigma_i} = \frac{1}{n_i}\sum_{i\in C_i}(x^{(i)}-\mu_i)^\intercal (x^{(i)}-\mu_i)$.
+
+En s'inspirant de la preuve du maximum de vraisemblance de la distribution gaussienne, on en déduit que :
+\begin{align*}
+\nabla_A l(A) = \frac{n_1}{2}A^{-1} - \frac{n_1}{2}\tilde{\Sigma_1} + \frac{n_0}{2}A^{-1} - \frac{n_0}{2}\tilde{\Sigma_0} = 0
+\end{align*}
+
+La condition d'optimalité nous donne finalement :
+$$ \hat{\Sigma} = \frac{n_1}{n}\tilde{\Sigma_1} + \frac{n_0}{n}\tilde{\Sigma_0} $$
+On observe que $\hat{\Sigma}$ est simplement la moyenne des matrices empiriques de covariance pondérées par la proportion observée de la classe correspondante.
 
 \item La distribution conditionnelle $p(y=1|x)$ s'écrit sous la forme suivante :
 \begin{align*}
@@ -109,7 +149,7 @@ p(y=1|x) &= \frac{p(x|y=1)\times p(y=1)}{p(x|y=1)\times p(y=1) + p(x|y=0)\times 
 &= \frac{1}{1 + \frac{p(x|y=0)\times p(y=0)}{p(x|y=1)\times p(y=1)}}
 \end{align*}
 
-En posant $s_i(x) = \log p(x|y=i)\times p(y=i)$, on obtient :
+En posant $s_i(x) = \log(p(x|y=i)\times p(y=i))$, on obtient :
 \begin{align*}
 p(y=1|x) &= \frac{1}{1 + \exp(-(s_1(x)-s_0(x)))}\\
 &= \sigma(s_1(x)-s_0(x))
@@ -120,6 +160,7 @@ On observe que la distribution conditionnelle peut se mettre sous une forme simi
 $$
 \log\frac{\pi}{1-\pi} - \frac{1}{2}\mu_1^\intercal \Sigma^{-1} \mu_1 + \frac{1}{2}\mu_0^\intercal \Sigma^{-1}\mu_0 + x^\intercal \Sigma^{-1}(\mu_1 - \mu_0) = 0
 $$
+Sur la Figure \ref{lda}, on peut observer les droites de classification par la méthode LDA sur les trois jeux de données.
 \triplefig{\subfig{dataset_A_lda}{1}{Dataset A}{lda_A}}
           {\subfig{dataset_B_lda}{1}{Dataset B}{lda_B}}
           {\subfig{dataset_C_lda}{1}{Dataset C}{lda_C}}
@@ -145,6 +186,7 @@ $b$ & $-0.7176$ & $1.1535$ & $0.8215$\\
 
 \item A présent, on cherche la droite de classification correspondant à $y = 0.5$, c'est à dire $w^\intercal x + b = 0$. Cela correspond à l'équation suivante :
 $$ x_2 = -\frac{w_1}{w_2}x_1 - \frac{b}{w_2} $$
+Sur la Figure \ref{log_reg}, on peut observer les droites de régression logistique sur les trois jeux de données.
 \triplefig{\subfig{dataset_A_log_reg}{1}{Dataset A}{log_reg_A}}
           {\subfig{dataset_B_log_reg}{1}{Dataset B}{log_reg_B}}
           {\subfig{dataset_C_log_reg}{1}{Dataset C}{log_reg_C}}
@@ -170,6 +212,7 @@ $b$ & $0.4923$ & $0.5001$ & $0.5084$\\
 
 \item A présent, on cherche la droite de régression correspondant à $y=0.5$. Cela correspond à l'équation suivante :
 $$ x_2 = -\frac{w_1}{w_2}x_1 + \frac{y-b}{w_2} $$
+Sur la Figure \ref{lin_reg}, on peut observer les droites de régression linéaire sur les trois jeux de données.
 \triplefig{\subfig{dataset_A_lin_reg}{1}{Dataset A}{lin_reg_A}}
           {\subfig{dataset_B_lin_reg}{1}{Dataset B}{lin_reg_B}}
           {\subfig{dataset_C_lin_reg}{1}{Dataset C}{lin_reg_C}}
@@ -232,6 +275,7 @@ $\pi$ & $\frac{1}{3}$ & $\frac{1}{2}$ & $0.625$\\
 $$
 \log \frac{\pi}{1 - \pi} + \frac{1}{2}\log\frac{\det \Sigma_1}{\det \Sigma_0} - \frac{1}{2}(x-\mu_1)^\intercal\Sigma_1^{-1}(x-\mu_1) + \frac{1}{2}(x-\mu_0)^\intercal\Sigma_0^{-1}(x-\mu_0) = 0
 $$
+Sur la Figure \ref{qda}, on peut observer les droites de classification par méthode QDA sur les trois jeux de données.
 \triplefig{\subfig{dataset_A_qda}{1}{Dataset A}{qda_A}}
           {\subfig{dataset_B_qda}{1}{Dataset B}{qda_B}}
           {\subfig{dataset_C_qda}{1}{Dataset C}{qda_C}}
