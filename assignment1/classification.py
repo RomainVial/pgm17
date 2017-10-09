@@ -1,9 +1,9 @@
 import matplotlib
-matplotlib.rcParams.update({'font.size': 15})
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import numpy as np
 
+matplotlib.rcParams.update({'font.size': 15})
 
 def load_data(idx='A', type='train'):
     with open('classification_data_HWK1/classification{}.{}'.format(idx, type)) as f:
@@ -27,10 +27,9 @@ def plot_curve(X, Y, idx, models, name):
     plt.title('Training set {}'.format(idx))
     legend = []
     for model in models:
-        model_legend = model.plot_curve()
-        legend.append(model_legend)
+        model.plot_curve(legend)
     first_legend = plt.legend(handles=legend, loc=1)
-    ax = plt.gca().add_artist(first_legend)
+    plt.gca().add_artist(first_legend)
     plt.xlabel('x_1')
     plt.ylabel('x_2')
     plt.legend(loc=3)
@@ -61,17 +60,17 @@ class LinearRegression:
         A_T = np.transpose(A)
         self.w_hat = np.dot(np.dot(np.linalg.inv(np.dot(A_T, A)), A_T), Y)
 
-    def plot_curve(self, start=-4., end=4.):
+    def plot_curve(self, legend, start=-4., end=4.):
         x_1 = np.arange(start, end, 0.2)
         x_2 = - (self.w_hat[0] / self.w_hat[1]) * x_1 + (0.5 - self.w_hat[2]) / self.w_hat[1]
 
         plt.plot(x_1, x_2, 'orange')
-        orange_line = mlines.Line2D([], [], color='orange', label='Linear Regression')
-        return orange_line
+        legend.append(mlines.Line2D([], [], color='orange', label='Linear Regression'))
 
     def inference(self, X):
         A = np.hstack([X, np.expand_dims(np.ones(X.shape[0]), axis=1)])
         return np.dot(A, self.w_hat)
+
 
 class LogisticRegression:
     def __init__(self):
@@ -91,16 +90,15 @@ class LogisticRegression:
     def train(self, X, Y):
         A = np.hstack([X, np.expand_dims(np.ones(X.shape[0]), axis=1)])
         self.w_hat = np.asarray([0., 0., 0.])
-        for i in range(10):
+        for i in range(5):
             self.irls_step(A, Y)
 
-    def plot_curve(self, start=-4., end=4.):
+    def plot_curve(self, legend, start=-4., end=4.):
         x_1 = np.arange(start, end, 0.2)
         x_2 = - (self.w_hat[0] / self.w_hat[1]) * x_1 - (self.w_hat[2] / self.w_hat[1])
 
         plt.plot(x_1, x_2, 'purple')
-        purple_line = mlines.Line2D([], [], color='purple', label='Logistic Regression')
-        return purple_line
+        legend.append(mlines.Line2D([], [], color='purple', label='Logistic Regression'))
 
     def inference(self, X):
         A = np.hstack([X, np.expand_dims(np.ones(X.shape[0]), axis=1)])
@@ -134,16 +132,15 @@ class LDA:
         self.sigma = self.pi * S_1 + (1-self.pi) * S_0
         self.sigma_inv = np.linalg.inv(self.pi * S_1 + (1-self.pi) * S_0)
 
-    def plot_curve(self, start=-4., end=4.):
-        x_min, x_max = -5., 5.
-        y_min, y_max = -5., 5.
+    def plot_curve(self, legend, start=-5., end=5.):
+        x_min, x_max = start, end
+        y_min, y_max = start, end
         xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
         z = self.inference(np.c_[xx.ravel(), yy.ravel()])
         z = np.reshape(z, xx.shape)
 
         plt.contour(xx, yy, z, [0.5], linewidths=1., colors='green')
-        green_line = mlines.Line2D([], [], color='green', label='LDA')
-        return green_line
+        legend.append(mlines.Line2D([], [], color='green', label='LDA'))
 
     def inference(self, X):
         s_0 = np.log(1 - self.pi) + X.dot(self.sigma_inv).dot(self.mu_0) - 0.5 * (self.mu_0).transpose().dot(self.sigma_inv).dot(self.mu_0)
@@ -182,16 +179,15 @@ class QDA:
         self.sigma_1 = (X_1 - self.mu_1).transpose().dot(X_1 - self.mu_1) / float(X_1.shape[0])
         self.sigma_1_inv = np.linalg.inv(self.sigma_1)
 
-    def plot_curve(self, start=-4., end=4.):
-        x_min, x_max = -5., 5.
-        y_min, y_max = -5., 5.
+    def plot_curve(self, legend, start=-5., end=5.):
+        x_min, x_max = start, end
+        y_min, y_max = start, end
         xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
         z = self.inference(np.c_[xx.ravel(), yy.ravel()])
         z = np.reshape(z, xx.shape)
 
         plt.contour(xx, yy, z, [0.5], linewidths=1., colors='k')
-        black_line = mlines.Line2D([], [], color='black', label='QDA')
-        return black_line
+        legend.append(mlines.Line2D([], [], color='black', label='QDA'))
 
 
     def inference(self, X):

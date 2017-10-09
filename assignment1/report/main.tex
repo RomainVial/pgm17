@@ -120,8 +120,6 @@ On observe que la distribution conditionnelle peut se mettre sous une forme simi
 $$
 \log\frac{\pi}{1-\pi} - \frac{1}{2}\mu_1^\intercal \Sigma^{-1} \mu_1 + \frac{1}{2}\mu_0^\intercal \Sigma^{-1}\mu_0 + x^\intercal \Sigma^{-1}(\mu_1 - \mu_0) = 0
 $$
-\item A présent, on cherche la droite de classification correspondant à $y = 0.5$. Cela correspond à l'équation suivante :
-$$ x_2 = -\frac{w_1}{w_2}x_1 - \frac{b}{w_2} $$
 \triplefig{\subfig{dataset_A_lda}{1}{Dataset A}{lda_A}}
           {\subfig{dataset_B_lda}{1}{Dataset B}{lda_B}}
           {\subfig{dataset_C_lda}{1}{Dataset C}{lda_C}}
@@ -132,20 +130,20 @@ $$ x_2 = -\frac{w_1}{w_2}x_1 - \frac{b}{w_2} $$
 
 On considère le modèle de régression logistique où $y = \sigma\left(w^\intercal x + b \right) = \sigma\left( (w_1 w_2) \begin{pmatrix}x_1\\x_2\end{pmatrix} + b \right)$.
 \begin{enumerate}[label=(\alph*)]
-\item Les paramètres appris par le modèle après 10 itérations de l'algorithme IRLS sur chaque jeu de données sont les suivant :
+\item Les paramètres appris par le modèle après 5 itérations de l'algorithme IRLS sur chaque jeu de données sont les suivant :
 \begin{center}
 \begin{tabular}{|l|c|c|c|}
 \hline
     & Dataset A & Dataset B & Dataset C\\
 \hline
-$w$ & $[-42.6261, -73.0275]^\intercal$ & $[-1.7052, 1.0238]^\intercal$& $[-2.2032, 0.7093]^\intercal$\\
+$w$ & $[-5.5489, -9.0189]^\intercal$ & $[-1.5603, 0.9244]^\intercal$& $[-2.0276, 0.5900]^\intercal$\\
 \hline
-$b$ & $-7.8018$ & $1.3496$ & $0.9592$\\
+$b$ & $-0.7176$ & $1.1535$ & $0.8215$\\
 \hline
 \end{tabular}
 \end{center}
 
-\item A présent, on cherche la droite de classification correspondant à $y = 0.5$. Cela correspond à l'équation suivante :
+\item A présent, on cherche la droite de classification correspondant à $y = 0.5$, c'est à dire $w^\intercal x + b = 0$. Cela correspond à l'équation suivante :
 $$ x_2 = -\frac{w_1}{w_2}x_1 - \frac{b}{w_2} $$
 \triplefig{\subfig{dataset_A_log_reg}{1}{Dataset A}{log_reg_A}}
           {\subfig{dataset_B_log_reg}{1}{Dataset B}{log_reg_B}}
@@ -190,14 +188,20 @@ $$ x_2 = -\frac{w_1}{w_2}x_1 + \frac{y-b}{w_2} $$
 \hline
 Linear Regression & $1.33$ & $2.07$ & $3.00$ & $\textbf{4.15}$ & $5.50$ & $4.23$\\
 \hline
-Logistic Regression & $\textbf{0.00}$ & $3.47$ & $\textbf{2.00}$ & $4.30$ & $\textbf{4.00}$ & $\textbf{2.27}$\\
+Logistic Regression & $\textbf{0.67}$ & $2.47$ & $\textbf{2.00}$ & $4.25$ & $\textbf{4.00}$ & $\textbf{2.37}$\\
 \hline
 LDA & $1.33$ & $\textbf{2.00}$ & $3.00$ & $\textbf{4.15}$ & $5.50$ & $4.23$\\
 \hline
 \end{tabular}
 \end{center}
 
-\item \textbf{TODO: Discussions sur les taux d'erreur}
+\item De façon générale, on observe que les performances sur les jeux d'entraînement sont meilleurs que sur les jeux de test. Ce résultat est cohérent car, par construction, on otpimise une fonction de coût sur le jeu d'entraînement. La réduction de l'erreur sur le jeu de test est seulement traîtée de façon indirecte, en supposant que sa distribution est la même que sur le jeu d'entraînement.
+
+Pour autant, sur le dataset C, les méthodes obtiennent de meilleurs résultats sur le jeu de données de test. Cela peut éventuellement s'expliquer par la non unimodalité de la distribution de la classe 1, faussant ainsi les hypothèses de séparabilité linéaire (régression linéaire et logistique) et de distribution normale des classes (LDA), amenant, par chance, à une meilleure performance sur le jeu de test.
+
+On remarque de plus que les méthodes de régression linéaire et LDA obtiennent des résultats quasi-identiques, alors que la régression logistique diffère notablement. C'est notamment cette dernière que l'on peut considérer comme la plus robuste sur ces trois jeux de données, ayant le meilleur résultat sur le dataset C et des résultats très similaires aux meilleurs sur les dataset A et B.
+
+Analysons plus en détails chacun des dataset. On observe que le dataset A est linéairement séparable avec deux distributions normales de variances similaires. Les trois méthodes linéaires sont donc adaptées, et obtiennent des résultats similaires et relativement bas avec 2\% d'erreurs. Le dataset B est composé de deux distributions normales linéairement séparables avec des variances différentes (hypothèse LDA non vérifiée). Les erreurs sont plus élevées, autour de 4\%. Enfin pour le dataset C, on observe une classe distribuée normalement (classe 0) et une classe distribuée de façon bimodale (classe 0). Les trois méthodes ne sont pas adaptées et obtiennent de mauvais résultats dès le jeu d'entraînement (environ 5\% d'erreurs), néanmoins, comme précisé précédemment, les performances sur le jeu de test sont légérement supérieures.
 \end{enumerate}
 
 \question{5. Quadratic Discriminant Analysis}
@@ -240,12 +244,16 @@ $$
 \multirow{2}{*}{Taux d'erreur (\%)} & \multicolumn{2}{c|}{Dataset A} & \multicolumn{2}{c|}{Dataset B} & \multicolumn{2}{c|}{Dataset C}\\
 & Train & Test & Train & Test & Train & Test\\
 \hline
-QDA & $0.67$ & $\textbf{2.00}$ & $\textbf{1.33}$ & $\textbf{2.00}$ & $5.25$ & $3.83$\\
+QDA & $\textbf{0.67}$ & $\textbf{2.00}$ & $\textbf{1.33}$ & $\textbf{2.00}$ & $5.25$ & $3.83$\\
 \hline
 \end{tabular}
 \end{center}
 
-\item \textbf{TODO: Commentaires sur les taux d'erreurs}
+\item On observe à présent que la méthode QDA obtient les meilleurs résultats sur les dataset A et B. Sur le dataset A, elle obtient le même résultat que la LDA. Ce résultat est cohérent car les variances des distributions des deux classes semblent similaires (on peut notamment observer que $\Sigma_0 \approx \Sigma_1$) et la méthode QDA revient à pratiquer une LDA. 
+
+Sur le dataset B, la méthode QDA prend tout son sens et obtient des résultats bien meilleurs que les 3 méthodes linéaires avec 2\% d'erreurs contre 4\% auparavant. En effet, dans ce cas, les deux classes sont distribuées normalement avec des variances différentes. 
+
+Pour finir, la méthode QDA obtient des résultats similaires aux méthodes linéaires sur le dataset C. Sur ce jeu de données, l'hypothèse de distribution normale des deux classes n'est pas respectée.
 \end{enumerate}
 
 \end{document} 

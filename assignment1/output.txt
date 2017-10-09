@@ -52,18 +52,18 @@ True/Predicted      1     0
 Error rate: 0.0207
 
 --Logistic Regression--
-w_hat: array([-42.62610177, -73.02751747,  -7.80183102])
+w_hat: array([-5.54892822, -9.01885324, -0.71757023])
 Train Classification
 True/Predicted      1     0
 1                  50     0
-0                   0   100
-Error rate: 0.0000
+0                   1    99
+Error rate: 0.0067
 
 Test Classification
 True/Predicted      1     0
-1                 465    35
+1                 480    20
 0                  17   983
-Error rate: 0.0347
+Error rate: 0.0247
 
 Analyzing dataset B
 --Quadratic Discriminant Analysis--
@@ -119,7 +119,7 @@ True/Predicted      1     0
 Error rate: 0.0415
 
 --Logistic Regression--
-w_hat: array([-1.70518586,  1.02378538,  1.34959157])
+w_hat: array([-1.56034479,  0.9244358 ,  1.15348556])
 Train Classification
 True/Predicted      1     0
 1                 145     5
@@ -128,9 +128,9 @@ Error rate: 0.0200
 
 Test Classification
 True/Predicted      1     0
-1                 968    32
-0                  54   946
-Error rate: 0.0430
+1                 967    33
+0                  52   948
+Error rate: 0.0425
 
 Analyzing dataset C
 --Quadratic Discriminant Analysis--
@@ -186,7 +186,7 @@ True/Predicted      1     0
 Error rate: 0.0423
 
 --Logistic Regression--
-w_hat: array([-2.2032324 ,  0.70926562,  0.95918885])
+w_hat: array([-2.02757805,  0.58997899,  0.82153301])
 Train Classification
 True/Predicted      1     0
 1                 243     7
@@ -195,7 +195,7 @@ Error rate: 0.0400
 
 Test Classification
 True/Predicted      1     0
-1                1959    41
-0                  27   973
-Error rate: 0.0227
+1                1958    42
+0                  29   971
+Error rate: 0.0237
 
