@@ -132,7 +132,7 @@ A présent, détaillons davantage le calcul de $\hat{\Sigma}$. On a tout d'abord
 \sum_{i\in C_i} \log \mathcal{N}(x^{(i)}, \mu_i, \Sigma) &= -\frac{n_i d}{2} \log(2\pi) - \frac{n_i}{2}\log \det \Sigma - \frac{1}{2}\sum_{i=1}^{n_i}(x^{(i)}-\mu_i)^\intercal \Sigma^{-1} (x^{(i)}-\mu_i)\\
 &= -\frac{n_i d}{2} \log(2\pi) + \frac{n_i}{2}\log \det A - \frac{n_i}{2} \text{Tr}(A\tilde{\Sigma_i})
 \end{align*}
-en posant $A = \Sigma^{-1}$ et $\tilde{\Sigma_i} = \frac{1}{n_i}\sum_{i\in C_i}(x^{(i)}-\mu_i)^\intercal (x^{(i)}-\mu_i)$.
+en posant $A = \Sigma^{-1}$ et $\tilde{\Sigma_i} = \frac{1}{n_i}\sum_{i\in C_i}(x^{(i)}-\mu_i)(x^{(i)}-\mu_i)^\intercal$.
 
 En s'inspirant de la preuve du maximum de vraisemblance de la distribution gaussienne, on en déduit que :
 \begin{align*}
@@ -154,7 +154,17 @@ En posant $s_i(x) = \log(p(x|y=i)\times p(y=i))$, on obtient :
 p(y=1|x) &= \frac{1}{1 + \exp(-(s_1(x)-s_0(x)))}\\
 &= \sigma(s_1(x)-s_0(x))
 \end{align*}
-On observe que la distribution conditionnelle peut se mettre sous une forme similaire à celle de la régression logistique. Néanmoins, l'introduction des distributions à priori sur $y$ et $x|y=i$ amènent à des résultats et des droites de classification différentes.
+Or,
+$$
+s_1(x) - s_0(x) = \log\frac{\pi}{1-\pi} - \frac{1}{2}\mu_1^\intercal \Sigma^{-1} \mu_1 + \frac{1}{2}\mu_0^\intercal \Sigma^{-1}\mu_0 + x^\intercal \Sigma^{-1}(\mu_1 - \mu_0)
+$$
+On a donc :
+\begin{align*}
+p(y=1|x)=\sigma(\tilde{w}^\intercal x + \tilde{b})
+\end{align*}
+avec $\tilde{w} = (\mu_1-\mu_0)^\intercal \Sigma$ et $\tilde{b} = \log\frac{\pi}{1-\pi} - \frac{1}{2}\mu_1^\intercal \Sigma^{-1} \mu_1 + \frac{1}{2}\mu_0^\intercal \Sigma^{-1}\mu_0$
+
+On observe que la distribution conditionnelle peut se mettre sous une forme similaire à celle de la régression logistique. Néanmoins, lors d'une régression logistique, on ne fait pas d'hypothèse sur la forme de la distribution des classes. Ainsi, les résultats obtenus avec les deux méthodes vont largement différer selon la distribution réelle des classes.
 
 \item A présent, on cherche la droite de classification correspondant à $p(y=1|x) = 0.5$ ou encore $s_1(x) = s_0(x)$. L'équation de la droite est la suivante :
 $$
@@ -238,18 +248,18 @@ LDA & $1.33$ & $\textbf{2.00}$ & $3.00$ & $\textbf{4.15}$ & $5.50$ & $4.23$\\
 \end{tabular}
 \end{center}
 
-\item De façon générale, on observe que les performances sur les jeux d'entraînement sont meilleurs que sur les jeux de test. Ce résultat est cohérent car, par construction, on otpimise une fonction de coût sur le jeu d'entraînement. La réduction de l'erreur sur le jeu de test est seulement traîtée de façon indirecte, en supposant que sa distribution est la même que sur le jeu d'entraînement.
+\item De façon générale, on observe que les performances sur les jeux d'entraînement sont meilleurs que sur les jeux de test. Ce résultat est cohérent car, par construction, on optimise une fonction de coût sur le jeu d'entraînement. La réduction de l'erreur sur le jeu de test est seulement traitée de façon indirecte, en supposant que sa distribution est la même que sur le jeu d'entraînement.
 
 Pour autant, sur le dataset C, les méthodes obtiennent de meilleurs résultats sur le jeu de données de test. Cela peut éventuellement s'expliquer par la non unimodalité de la distribution de la classe 1, faussant ainsi les hypothèses de séparabilité linéaire (régression linéaire et logistique) et de distribution normale des classes (LDA), amenant, par chance, à une meilleure performance sur le jeu de test.
 
 On remarque de plus que les méthodes de régression linéaire et LDA obtiennent des résultats quasi-identiques, alors que la régression logistique diffère notablement. C'est notamment cette dernière que l'on peut considérer comme la plus robuste sur ces trois jeux de données, ayant le meilleur résultat sur le dataset C et des résultats très similaires aux meilleurs sur les dataset A et B.
 
-Analysons plus en détails chacun des dataset. On observe que le dataset A est linéairement séparable avec deux distributions normales de variances similaires. Les trois méthodes linéaires sont donc adaptées, et obtiennent des résultats similaires et relativement bas avec 2\% d'erreurs. Le dataset B est composé de deux distributions normales linéairement séparables avec des variances différentes (hypothèse LDA non vérifiée). Les erreurs sont plus élevées, autour de 4\%. Enfin pour le dataset C, on observe une classe distribuée normalement (classe 0) et une classe distribuée de façon bimodale (classe 0). Les trois méthodes ne sont pas adaptées et obtiennent de mauvais résultats dès le jeu d'entraînement (environ 5\% d'erreurs), néanmoins, comme précisé précédemment, les performances sur le jeu de test sont légérement supérieures.
+Analysons plus en détails chacun des dataset. On observe que le dataset A est linéairement séparable avec deux distributions normales de variances similaires. Les trois méthodes linéaires sont donc adaptées, et obtiennent des résultats similaires et relativement bas avec 2\% d'erreurs. Le dataset B est composé de deux distributions normales linéairement séparables avec des variances différentes (hypothèse LDA non vérifiée). Les erreurs sont plus élevées, autour de 4\%. Enfin pour le dataset C, on observe une classe distribuée normalement (classe 0) et une classe distribuée de façon bimodale (classe 0). Les trois méthodes ne sont pas adaptées et obtiennent de mauvais résultats dès le jeu d'entraînement (environ 5\% d'erreurs), néanmoins, comme précisé précédemment, les performances sur le jeu de test sont légèrement supérieures.
 \end{enumerate}
 
 \question{5. Quadratic Discriminant Analysis}
 
-A présent, on relache l'hypothèse d'égalité des matrices de covariance pour obtenir un modèle d'analyse discriminante quadratique.
+A présent, on relâche l'hypothèse d'égalité des matrices de covariance pour obtenir un modèle d'analyse discriminante quadratique. L'estimateur du maximum de vraisemblance pour les matrices $\Sigma_0$ et $\Sigma_1$ devient simplement les matrices empiriques de covariance associées à chacune des classes $0$ et $1$.
 
 \begin{enumerate}[label=(\alph*)]
 \item Les paramètres appris par le modèle sur chaque jeu de données sont les suivant:
