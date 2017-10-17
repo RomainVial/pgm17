@@ -39,6 +39,7 @@ Error rate: 0.0200
 
 --Linear Regression--
 w_hat: array([-0.2640075 , -0.37259311,  0.49229204])
+sigma: 0.039865517973029736
 Train Classification
 True/Predicted      1     0
 1                  50     0
@@ -106,6 +107,7 @@ Error rate: 0.0415
 
 --Linear Regression--
 w_hat: array([-0.10424575,  0.05179118,  0.50005043])
+sigma: 0.054264082689522521
 Train Classification
 True/Predicted      1     0
 1                 142     8
@@ -173,6 +175,7 @@ Error rate: 0.0423
 
 --Linear Regression--
 w_hat: array([-0.12769333, -0.01700142,  0.50839982])
+sigma: 0.062249980937486474
 Train Classification
 True/Predicted      1     0
 1                 241     9
