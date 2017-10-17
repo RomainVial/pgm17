@@ -205,7 +205,7 @@ Sur la Figure \ref{log_reg}, on peut observer les droites de régression logisti
 
 \question{3. Linear Regression}
 
-On considère le modèle de régression linéaire où $y = w^\intercal x + b = (w_1 w_2) \begin{pmatrix}x_1\\x_2\end{pmatrix} + b$.
+On considère le modèle de régression linéaire où $y = w^\intercal x + b + \epsilon = (w_1 w_2) \begin{pmatrix}x_1\\x_2\end{pmatrix} + b + \epsilon$ où $\epsilon = \mathcal{N}(0, \sigma^2)$.
 \begin{enumerate}[label=(\alph*)]
 \item Les paramètres appris par le modèle sur chaque jeu de données sont les suivant:
 \begin{center}
@@ -216,6 +216,8 @@ On considère le modèle de régression linéaire où $y = w^\intercal x + b = (
 $w$ & $[-0.2640, -0.3726]^\intercal$ & $[-0.1042, 0.0518]^\intercal$& $[-0.1277, -0.0170]^\intercal$\\
 \hline
 $b$ & $0.4923$ & $0.5001$ & $0.5084$\\
+\hline
+$\sigma^2$ & $0.0399$ & $0.0543$ & $0.0622$\\
 \hline
 \end{tabular}
 \end{center}

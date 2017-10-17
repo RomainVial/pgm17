@@ -51,14 +51,18 @@ def confusion_matrix(Y, Y_hat, threshold=0.5):
 class LinearRegression:
     def __init__(self):
         self.w_hat = None
+        self.sigma = None
 
     def __str__(self):
-        return 'w_hat: ' + repr(self.w_hat)
+        w_hat = 'w_hat: ' + repr(self.w_hat)
+        sigma = 'sigma: ' + repr(self.sigma)
+        return '\n'.join([w_hat, sigma])
 
     def train(self, X, Y):
         A = np.hstack([X, np.expand_dims(np.ones(X.shape[0]), axis=1)])
         A_T = np.transpose(A)
         self.w_hat = np.dot(np.dot(np.linalg.inv(np.dot(A_T, A)), A_T), Y)
+        self.sigma = np.mean(np.square(Y - A.dot(self.w_hat)))
 
     def plot_curve(self, legend, start=-4., end=4.):
         x_1 = np.arange(start, end, 0.2)
@@ -69,7 +73,7 @@ class LinearRegression:
 
     def inference(self, X):
         A = np.hstack([X, np.expand_dims(np.ones(X.shape[0]), axis=1)])
-        return np.dot(A, self.w_hat)
+        return A.dot(self.w_hat)
 
 
 class LogisticRegression:
