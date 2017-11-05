@@ -32,7 +32,6 @@ def plot_ellipse(splot, mean, cov, color):
 
 
 class KMeans:
-    # Do several random initializations
     def __init__(self, K, initializer='zero'):
         self.K = K
         self.mu = None
@@ -68,17 +67,22 @@ class KMeans:
         mu = np.zeros((self.nb_restart, self.K, X.shape[1]))
         for restart in range(self.nb_restart):
             mu[restart,:] = self.initialize(X)
-            J[restart] = []
             mu_old = copy.copy(mu[restart,:])
             term = False
             step = 0
-
             while step < self.maxstep and not term:
+                # Compute distances then assign to corresponding centroids
                 distances = np.sum(np.square(np.expand_dims(X, axis=1) - mu[restart]), axis=-1)
                 z = np.argmin(distances, axis=-1)
+
+                # Compute distortion
                 J[restart].append(self.distortion(X, z, mu[restart]))
+
+                # Update the centroids based on the assignment
                 for k in range(self.K):
                     mu[restart,k] = np.sum(X[z == k,:], axis=0) / (np.sum(z == k) + 1e-12)
+
+                # Terminate the computation if we reach a stationary point
                 term = np.all(np.equal(mu[restart], mu_old))
                 mu_old = copy.copy(mu[restart])
                 step += 1
@@ -89,7 +93,6 @@ class KMeans:
             print 'Fitted after {} iterations'.format(len(J[best_restart][: ]))
             print 'Initial distortion : J = {:.2f}'.format(J[best_restart][0])
             print 'Final distortion : J = {:.2f}'.format(J[best_restart][-1])
-            print self.mu
             self.plot_distortion(J[best_restart])
 
     def inference(self, X):
@@ -131,7 +134,7 @@ class KMeans:
 
 
 class GaussianMixture:
-    def __init__(self, K, covariance_hypothesis='spherical'):
+    def __init__(self, K, covariance_hypothesis='spherical', iterations=50):
         self.K = K
         self.covariance_hypothesis = covariance_hypothesis
         if self.covariance_hypothesis == 'spherical':
@@ -143,6 +146,7 @@ class GaussianMixture:
         self.pi = None
         self.mu = None
         self.sigma = None
+        self.iterations = iterations
 
     def _compute_sigma_spherical(self, X, tau, mu):
         return 0.5 * np.sum(tau * ((X-mu) * (X-mu)).sum(axis=1)) / np.sum(tau)
@@ -192,7 +196,8 @@ class GaussianMixture:
         pi, mu, sigma = self.initialize_with_kmeans(X)
         tau = np.zeros((X.shape[0], self.K))
 
-        for step in range(50):
+        for step in range(self.iterations):
+            # Compute log-likelihood
             ll.append(self.log_likelihood(X, pi, mu, sigma))
 
             # Compute soft assignment to cluster k, tau[i,k] (Expectation step)
@@ -269,16 +274,19 @@ if __name__=='__main__':
     X_train = load_data()
     X_test = load_data(type='test')
 
+    print "----- K-MEANS -----"
     kmeans = KMeans(4, initializer='random')
     kmeans.train(X_train)
     kmeans.plot(X_train)
     kmeans.plot(X_test)
 
+    print "\n----- SPHERICAL GMM -----"
     gm = GaussianMixture(4, 'spherical')
     gm.train(X_train)
     gm.plot(X_train)
     gm.plot(X_test)
 
+    print "\n----- GENERAL GMM -----"
     gm = GaussianMixture(4, 'general')
     gm.train(X_train)
     gm.plot(X_train)
