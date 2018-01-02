@@ -225,10 +225,11 @@ if __name__ == '__main__':
     X_train = load_data()
     X_test = load_data(type='test')
 
+    print "----- GMM -----"
     gm = GaussianMixture(4, 'general')
-    gm.train(X_train, render=False)
+    gm.train(X_train, render=True)
 
-    print "----- HMM -----"
+    print "\n----- HMM -----"
     hmm = HMM(4, gm.mu, gm.sigma)
 
     # Plot gamma before training
