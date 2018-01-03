@@ -33,7 +33,7 @@ def log_matrix_dot(A, log_p):
 class HMM:
     def __init__(self, K, mu, sigma):
         self.K = K
-        self.iterations = 5
+        self.iterations = 10
         # Markov chain parameters
         self.pi = [0.25, 0.25, 0.25, 0.25]
         self.A = 1. / 6. * np.ones((4, 4)) + 2. / 6. * np.eye(4)
@@ -81,23 +81,23 @@ class HMM:
         log_gamma = log_alphas + log_betas - log_part
 
         # Compute the probability of (q_t, q_t+1) given the observed variables
-        log_chsi = np.zeros((T - 1, self.K, self.K))
+        log_xi = np.zeros((T - 1, self.K, self.K))
         log_multivariate_normal = lambda x, k: multivariate_normal.logpdf(x, self.mu[k], self.sigma[k])
         for t in range(T - 1):
             for i in range(self.K):
                 for j in range(self.K):
-                    log_chsi[t, i, j] = log_alphas[t, i] + log_betas[t + 1, j] + np.log(
+                    log_xi[t, i, j] = log_alphas[t, i] + log_betas[t + 1, j] + np.log(
                         self.A[i, j]) + log_multivariate_normal(X[t + 1, :], j) - log_part[t, 0]
 
-        return np.exp(log_gamma), np.exp(log_chsi)
+        return np.exp(log_gamma), np.exp(log_xi)
 
     def _compute_loglikelihood(self, X):
-        gamma, chsi = self._decoding(X)
+        gamma, xi = self._decoding(X)
 
         log_multivariate_normal = lambda x: np.array(
             [multivariate_normal.logpdf(x, self.mu[i], self.sigma[i]) for i in range(self.K)])
         ll = np.sum(gamma * np.swapaxes(log_multivariate_normal(X), 0, 1)) + np.sum(
-            chsi * np.log(self.A[np.newaxis, :, :]))
+            xi * np.log(self.A[np.newaxis, :, :]))
         return ll
 
     def fit(self, X_train, X_test, render=True):
@@ -112,7 +112,7 @@ class HMM:
             ll['test'].append(self._compute_loglikelihood(X_test))
 
             # E-step
-            gamma, chsi = self._decoding(X_train)
+            gamma, xi = self._decoding(X_train)
 
             # M-step
             self.pi = gamma[0, :]
@@ -120,16 +120,18 @@ class HMM:
             for i in range(self.K):
                 # Update A
                 for j in range(self.K):
-                    self.A[i, j] = np.sum(chsi[:, i, j]) / np.sum(chsi[:, i, :])
+                    self.A[i, j] = np.sum(xi[:, i, j]) / np.sum(xi[:, i, :])
 
                 # Update mu and sigma
                 self.mu[i] = np.sum(gamma[:, i, np.newaxis] * X_train, axis=0) / np.sum(gamma[:, i])
 
                 # Update sigma
-                self.sigma[i] = sum(
-                    gamma[t, i] * np.outer(X_train[t, :] - self.mu[i], X_train[t, :] - self.mu[i]) for t in
-                    range(T)) / np.sum(gamma[:, i])
+                self.sigma[i] = sum(gamma[t, i] * np.outer(X_train[t, :] - self.mu[i], X_train[t, :] - self.mu[i])
+                                    for t in range(T)) / np.sum(gamma[:, i])
 
+        print 'Initial likelihood : J = {:.2f}'.format(ll['train'][0])
+        print 'Final likelihood : J = {:.2f}'.format(ll['train'][-1])
+        print 'Test likelihood : J = {:.2f}'.format(ll['test'][-1])
         if render:
             self.plot_likelihood(ll)
 
@@ -150,11 +152,11 @@ class HMM:
                 paths[k]['log_v'] = np.amax(log_v)
 
         best_path_key = np.argmax([paths[key]['log_v'] for key in paths])
-        return np.asarray(paths[best_path_key]['states'])
+        return np.asarray(paths[best_path_key]['states']).astype(int)
 
     def plot(self, X):
         colors = ['blue', 'red', 'purple', 'darkred']
-        gamma, chsi = self._decoding(X)
+        gamma, _ = self._decoding(X)
         z = np.argmax(gamma, axis=-1)
 
         # Plot the data points, ellipses and centroids
@@ -172,13 +174,13 @@ class HMM:
 
         if opt == 'proba':
             f, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharex=True, sharey=True)
-            ax1.plot(gamma[:len, 0])
+            ax1.plot(range(len), gamma[:len, 0])
             ax2.plot(gamma[:len, 1])
             ax3.plot(gamma[:len, 2])
             ax4.plot(gamma[:len, 3])
         elif opt == 'states':
             z = np.argmax(gamma, axis=-1)
-            plt.plot(z, 'ro')
+            plt.plot(z[:len], 'ro')
 
         plt.show()
 
@@ -206,7 +208,7 @@ class HMM:
             ax3.plot(np.where(states[:len] == 2, 1, 0))
             ax4.plot(np.where(states[:len] == 3, 1, 0))
         elif opt == 'states':
-            plt.plot(states, 'ro')
+            plt.plot(states[:len], 'ro')
 
         plt.show()
 
@@ -225,9 +227,15 @@ if __name__ == '__main__':
     X_train = load_data()
     X_test = load_data(type='test')
 
-    print "----- GMM -----"
-    gm = GaussianMixture(4, 'general')
+    print "----- GMM Spherical -----"
+    gm = GaussianMixture(4, 'spherical')
     gm.train(X_train, render=True)
+    gm.plot(X_test)
+
+    print "\n----- GMM General -----"
+    gm = GaussianMixture(4, 'general')
+    gm.train(X_train, render=False)
+    gm.plot(X_test)
 
     print "\n----- HMM -----"
     hmm = HMM(4, gm.mu, gm.sigma)

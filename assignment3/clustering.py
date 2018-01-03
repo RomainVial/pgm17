@@ -208,9 +208,9 @@ class GaussianMixture:
         self.mu = mu
         self.sigma = sigma
 
+        print 'Initial likelihood : J = {:.2f}'.format(ll[0])
+        print 'Final likelihood : J = {:.2f}'.format(ll[-1])
         if render:
-            print 'Initial likelihood : J = {:.2f}'.format(ll[0])
-            print 'Final likelihood : J = {:.2f}'.format(ll[-1])
             self.plot_likelihood(ll)
 
     def inference(self, X):
