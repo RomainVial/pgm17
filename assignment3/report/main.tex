@@ -1,0 +1,195 @@
+\documentclass{article} 
+\input{packages}
+\input{macros}
+\usepackage{multirow}
+\usepackage[ruled, vlined]{algorithm2e}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Header
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\assignmenttitle}{Homework 3}
+\renewcommand{\studentname}{Romain Vial}
+\renewcommand{\email}{romain.vial@ens-paris-saclay.fr}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Syntax for using figure macros:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \singlefig{filename}{scalefactor}{caption}{label}
+% \doublefig{\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {global caption}{label}
+% \triplefig{\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {\subfig{filename}{scalefactor}{subcaption}{sublabel}}
+%           {global caption}{label}
+%
+% Tips:
+% - with scalefactor=1, a single figure will take the whole page width; a double figure, half page width; and a triple figure, a third of the page width
+% - image files should be placed in the image folder
+% - no need to put image extension to include the image
+% - for vector graphics (plots), pdf figures are suggested 
+% - for images, jpg/png are suggested
+% - labels can be left empty {}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beginning of assignment
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+
+\section*{HMM - Implementation}
+
+We have sequential data of the form $u_t = (x_t, y_t)$ for $t=1\ldots T$. We consider the following HMM model: the chain $(q_t)_{t=1\ldots T}$ has 4 possible states with an initial probability distribution $\pi$ and a probability transition matrix $A$. Conditionnaly on the current state, the observations are obtained from a gaussian distribution $u_t|q_t=k \sim \mathcal{N}(\mu_k, \Sigma_k)$.
+
+\question{1. Implement the recursions $\alpha$ et $\beta$ seen in class to compute $p(q_t|u_1,\ldots,u_T)$ and $p(q_t, q_{t+1}|u_1,\ldots,u_T)$.}
+
+Cf. code. We use the same notation as in the polycopié, i.e. $\gamma(q_t) = p(q_t|u_1,\ldots,u_T)$ and $\xi(q_t, q_{t+1}) = p(q_t, q_{t+1}|u_1,\ldots,u_T)$.
+
+\question{2. Represent $p(q_t|u_1,\ldots,u_T)$ for each of the 4
+states as a function of time for the 100 first datapoints in the file.}
+
+For this question, we set $\pi$ to be the uniform probability distribution over the 4 states and $A = \frac{1}{6} \times 
+\begin{pmatrix}
+3 & 1 & 1 & 1\\
+1 & 3 & 1 & 1\\
+1 & 1 & 3 & 1\\
+1 & 1 & 1 & 3
+\end{pmatrix}$. The $\mu_k$ and $\Sigma_k$ are initialized with the ones obtained with a GMM model.
+
+Figure \ref{fig:gamma_before} shows $\gamma(q_t = k)$ for $k\in\{1,2,3,4\}$ as a function of time for the 100 first datapoints in the test file before fitting the parameters. One can see that the algorithm predicts with a score very close to 1 most of the points. Nevertheless, some points are more ambiguous, e.g.~the point with index 35.
+
+\singlefig{gamma_before}{1.}{Representation of $\gamma(q_t = k)$ for $k\in\{1,2,3,4\}$ as a function of time for the 100 first datapoints in the test file before fitting the parameters.}{fig:gamma_before}
+
+\question{3. Derive the estimation equations of the EM algorithm.}
+
+The complete log-likelihood can be written as follows:
+\begin{align*}
+\log p(u,q) =& \log \left( p(q_0) \prod_{t=0}^T p(u_t|q_t) \prod_{t=1}^T p(q_t|q_{t-1})\right)\\
+=& \log p(q_0) + \sum_{t=0}^T \log p(u_t|q_t) + \sum_{t=1}^T \log p(q_t|q_{t-1})\\
+=& \sum_{k=1}^K \delta_{q_0 = k} \log \pi_k + \sum_{k=1}^K \sum_{t=0}^T \delta_{q_t = k} \log \mathcal{N}(u_t| \mu_k, \Sigma_k) + \\
+&\sum_{k=1}^K \sum_{k'=1}^K \sum_{t=1}^T \delta_{q_t = k, q_{t-1}=k'} \log A_{k'k}
+\end{align*}
+
+First, let note that:
+\begin{align*}
+\mathbb{E}_{q|u}[\delta_{q_0 = k}] &= \mathbb{E}[\delta_{q_0 = k} | \bar{u}]\\
+&= p(q_0 = k | \bar{u})\\
+&=\gamma(q_0=k)\\
+\mathbb{E}_{q|u}[\delta_{q_t = k}] &= \gamma(q_t=k)\\
+\mathbb{E}_{q|u}[\delta_{q_t = k, q_{t-1}=k'}] &= \xi(q_{t-1}=k', q_t=k)
+\end{align*}
+
+The expectation step follows immediately:
+\begin{align*}
+\mathbb{E}_{q|u}[\log p(u,q)] =& \sum_{k=1}^K \gamma(q_0=k) \log \pi_k + \sum_{k=1}^K \sum_{t=0}^T \gamma(q_t=k) \log \mathcal{N}(u_t| \mu_k, \Sigma_k) + \\
+&\sum_{k=1}^K \sum_{k'=1}^K \sum_{t=1}^T \xi(q_{t-1}=k', q_t=k) \log A_{k'k}
+\end{align*}
+
+As everything decouples, the maximization step finally gives us:
+\begin{align*}
+\pi_k =& \gamma(q_0=k)\\
+A_{k'k} =& \frac{\sum_{t=1}^T \xi(q_{t-1}=k', q_t=k)}{\sum_{t=1}^T \sum_{k=1}^K \xi(q_{t-1}=k', q_t=k)}\\
+\mu_k =& \frac{\sum_{t=0}^T \gamma(q_t = k) u_t}{\sum_{t=0}^T \gamma(q_t = k)}\\
+\Sigma_k =& \frac{ \sum_{t=0}^T \gamma(q_t = k) (u_t - \mu_k)(u_t - \mu_k)^\intercal}{\sum_{t=0}^T \gamma(q_t = k)}
+\end{align*}
+
+\question{4. Implement the EM algorithm to learn the parameters of the model.}
+
+Cf. code
+
+\question{5. Plot the log-likelihood on the train data and on the test data as a function of the iterations of the algorithm. Comment.}
+
+Figure \ref{fig:log_likelihood} shows the log-likelihood against the number of iterations of EM. One can see that the algorithm converges quite fast in approximately 2 iterations. The test log-likelihood is higher than the train log-likelihood as the parameters hasn't been fitted on this dataset.
+
+\singlefig{log_likelihood}{0.8}{Log-likelihood on the train data and on the test data as a function of the iterations of the algorithm.}{fig:log_likelihood}
+
+\question{6. Return in a table the values of the log-likelihoods of the Gaussian mixture models and of the HMM on the train and on the test data. Compare these values. Does it make sense to make this comparison ? Conclude.}
+
+Table \ref{tb:ll} shows the log-likelihoods of the GMM and of the HMM on the train and on the test data. One can see that the HMM has the highest log-likelihood for both the train and the test data. The situation is logical as the HMM is a more complex and more flexible model than the GMM, hence it is more effective at capturing the underlying distribution of the data. In addition, the test log-likelihood is also decreasing which means that we haven't overfit the data yet.
+
+The comparison between the log-likelihoods make sense in this case because we are comparing the likelihood of the data, i.e.~$p(y)$, and not the complete likelihood, i.e.~$p(y, z)$. The only new assumptions that we are making in the HMM lies in the definition of $z$ as a chain, hence $y$ still refers to the same object in both cases. 
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+Model & Train & Test\\
+\hline
+GMM - spherical & -2639.67 & -2614.59 \\
+\hline
+GMM - general & -2327.72 & -2408.98 \\
+\hline
+HMM & \textbf{-1905.97} & \textbf{-1962.83} \\
+\hline
+\end{tabular}
+\caption{Log-likelihoods of the GMM and of the HMM on the train and on the test data.}
+\label{tb:ll}
+\end{table}
+
+\question{7. Provide a description and pseudo-code for the Viterbi decoding algorithm that estimates the most likely sequence of states.}
+
+Algorithm \ref{alg:viterbi} shows a pseudo-code for the Viterbi decoding algorithm. It first stores all possible initializations for the paths. For example, in our case all the possible paths begin with a state in $\{1,2,3,4\}$. Hence we store these four initial paths along with their log-likelihood value. Then, we loop among the data and update the initial paths with the states that maximize their log-likelihood. At the end, we select the path that has the highest log-likelihood value.
+
+\begin{algorithm}[ht!]
+\KwData{Learned parameters $\pi, A, \mu_k, \Sigma_k$ and data $u_0, \ldots, u_T$}
+\KwResult{Best sequence $[q_0, \ldots, q_T]$}
+\tcc{Store all the possible initializations for the paths}
+\For{k=1\ldots K}{
+	paths[k] = \{'ll': $\log\left(\pi_k \times \mathcal{N}(u_0|\mu_k, \Sigma_k)\right)$, 'states': [k]\}
+}
+
+\tcc{Update all the initial paths with the states maximizing their log-likelihood}
+\For{t=1\ldots T}{
+	\For{k=1\ldots K}{
+		k', prev\_ll= paths[k]['states'][-1], paths[k]['ll']\\ 
+		next\_state = $\arg\max_{k''} \left[ \log\mathcal{N}(u_t|\mu_k, \Sigma_k) + \log A_{k'k''} + prev\_ll \right]$\\
+		next\_ll = $\max_{k''} \left[ \log\mathcal{N}(u_t|\mu_k, \Sigma_k) + \log A_{k'k''} + prev\_ll \right]$\\
+		paths[k] = \{'ll'+= next\_ll, 'states'+= [next\_state]\}
+	}
+}
+Return the list of states among paths which has the highest 'log-value'.
+\caption{Pseudo-code for the Viterbi decoding algorithm}
+\label{alg:viterbi}
+\end{algorithm}
+
+\question{8. Implement Viterbi decoding. Represent the data in 2D with the cluster centers and with markers of different colors for the datapoints belonging to different classes.}
+
+Cf. code for the implementation. Figure \ref{fig:plot_viterbi} shows the most likely sequence of states along with the different learned parameters (cluster centers and covariance matrices).
+
+\singlefig{plot_viterbi}{0.5}{Representation of the most likely sequence of states along with the different learned parameters.}{fig:plot_viterbi}
+
+\question{9. For each state plot the probability of being in that state as a function of time for the 100 first points of the test dataset.}
+
+Figure \ref{fig:gamma_after} shows for each state the probability of being in that state as a function of time for the 100 first points of the test dataset. Compared to Fig.~\ref{fig:gamma_before}, one ca see that the output is more smooth and most of the ambiguous points have disappeared. 
+
+\singlefig{gamma_after}{1}{Representation of $\gamma(q_t = k)$ for $k\in\{1,2,3,4\}$ as a function of time for the 100 first datapoints in the test file after learning the parameters with EM.}{fig:gamma_after}
+
+\question{10. Make a plot representing the most likely state in $\{1, 2, 3, 4\}$ based on the marginal probability computed in the previous question as function of time for these 100 points.}
+
+Figure \ref{fig:gamma_states} shows the most likely state in $\{1, 2, 3, 4\}$ based on the marginal probability computed in the previous question.
+
+\question{11. Run Viterbi on the test data. Compare the most likely sequence of states obtained for the 100 first data points with the sequence of states obtained in the previous question. Make a similar plot. Comment.}
+
+Figure \ref{fig:viterbi_states} shows the most likely state in $\{1, 2, 3, 4\}$ based on the Viterbi decoding algorithm. One can see that for most of the points we predict the same state with the two algorithms. Nevertheless, in some cases, the sequence based on the marginal probabilities has some mistakes.
+
+We can conclude that the method using marginal probabilities is a good proxy to have a quick and reliable answer but it can make mistakes. The Viterbi decoding can find the exact solution but needs more computational resources. 
+
+\doublefig{\subfig{gamma_states}{1}{Computed with the marginal probability}{fig:gamma_states}}
+          {\subfig{viterbi_states}{1}{Computed with Viterbi decoding}{fig:viterbi_states}}
+          {Representation of the most likely state as a function of time for the 100 first datapoints in the test file after learning the parameters with EM.}{fig:states}
+          
+\question{12. In this problem the number of states was known. How would you choose the number of states if you did not know it ?}
+
+In the case where the number of states is unknown and not obvious when looking at the data because of e.g. the dimensionality, two methods could be explored:
+\begin{enumerate}[label=(\roman*)]
+\item cross-validation: the idea is to compute the log-likelihood over a dev set with models trained on the train set with different number of states. Once the best number of states according to the dev set has been found, one can finally evaluate on the test set.
+\item Bayesian Information Criterion (BIC): the idea is to compute the BIC for a set of models and to choose the model with the lowest score. The BIC is defined as:
+$$
+\text{BIC}(\mathcal{M}) = k\log n - 2\log L
+$$
+where k is the number of parameters, n is the number of datapoints and L is the maximum likelihood of the model $\mathcal{M}$. Hence, it penalizes the minimum negative log-likelihood by the number of free parameters.
+\end{enumerate}
+
+\end{document} 
